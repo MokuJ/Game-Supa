@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lie Detector Simulator</title>
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: #0b0b0b;
+    color: #e6e6e6;
+    font-family: monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.game {
+    width: 90%;
+    max-width: 520px;
+    padding: 20px;
+    border: 2px solid #333;
+    transition: all 0.3s ease;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+#npc {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+#statement {
+    min-height: 70px;
+    font-size: 1.1rem;
+    margin: 15px 0;
+    text-align: center;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-around;
+}
+
+button {
+    width: 45%;
+    padding: 10px;
+    background: #111;
+    color: #fff;
+    border: 1px solid #555;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+button:hover {
+    background: #222;
+}
+
+#reaction {
+    margin-top: 15px;
+    font-style: italic;
+    color: #aaa;
+    min-height: 40px;
+    text-align: center;
+}
+
+.stats {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.corrupt {
+    background: #160000;
+    border-color: #660000;
+}
+
+.end {
+    text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="game" id="game">
+    <h1>LIE DETECTOR</h1>
+    <div id="npc">NPC Status: Neutral</div>
+    <div id="statement"></div>
+
+    <div class="buttons">
+        <button onclick="answer('truth')">TRUTH</button>
+        <button onclick="answer('lie')">LIE</button>
+    </div>
+
+    <div id="reaction"></div>
+
+    <div class="stats">
+        <div id="sanity">Sanity: 100%</div>
+        <div id="accuracy">Accuracy: 100%</div>
+    </div>
+</div>
+
+<script>
+const statements = [
+    "I have never lied to you.",
+    "You are calm.",
+    "This system is unbiased.",
+    "Your answers are predictable.",
+    "You hesitated just now.",
+    "You look confident.",
+    "This question matters.",
+    "You believe you're honest.",
+    "We already know the answer.",
+    "You feel watched."
+];
+
+const reactions = [
+    "Noted.",
+    "That response was delayed.",
+    "Inconsistency detected.",
+    "Your behavior changed.",
+    "Eye movement registered.",
+    "Voice stress increased.",
+    "Pattern deviation logged.",
+    "That was unnecessary.",
+    "Expected.",
+    "You seem uncertain."
+];
+
+let sanity = 100;
+let accuracy = 100;
+let mood = 0; // 0 neutral, 1 suspicious, 2 hostile
+let lastTime = Date.now();
+
+function newStatement() {
+    lastTime = Date.now();
+    document.getElementById("statement").innerText =
+        statements[Math.floor(Math.random() * statements.length)];
+}
+
+function updateNPC() {
+    const npc = document.getElementById("npc");
+    if (mood === 0) npc.innerText = "NPC Status: Neutral";
+    if (mood === 1) npc.innerText = "NPC Status: Suspicious";
+    if (mood === 2) npc.innerText = "NPC Status: Hostile";
+}
+
+function answer(choice) {
+    const reactionTime = Date.now() - lastTime;
+
+    // Hesitation penalty
+    if (reactionTime > 2500) sanity -= 15;
+    else sanity -= Math.random() < 0.6 ? 10 : 3;
+
+    // Fake accuracy logic
+    accuracy -= Math.floor(Math.random() * 8) + 2;
+    if (accuracy < 30 && Math.random() < 0.5) accuracy += 10;
+
+    // Mood escalation
+    if (sanity < 70) mood = 1;
+    if (sanity < 40) mood = 2;
+
+    document.getElementById("reaction").innerText =
+        reactions[Math.floor(Math.random() * reactions.length)];
+
+    sanity = Math.max(sanity, 0);
+    accuracy = Math.max(Math.min(accuracy, 100), 0);
+
+    document.getElementById("sanity").innerText = "Sanity: " + sanity + "%";
+    document.getElementById("accuracy").innerText = "Accuracy: " + accuracy + "%";
+
+    if (sanity < 50) document.getElementById("game").classList.add("corrupt");
+
+    updateNPC();
+
+    if (sanity <= 0) {
+        endGame();
+    } else {
+        setTimeout(newStatement, 700);
+    }
+}
+
+function endGame() {
+    document.getElementById("game").innerHTML = `
+        <div class="end">
+            <h1>ASSESSMENT COMPLETE</h1>
+            <p>Subject demonstrated behavioral instability.</p>
+            <p><b>Verdict:</b> UNTRUSTWORTHY</p>
+            <p>Accuracy Score: ${accuracy}%</p>
+            <p style="color:#666;">Further input is unnecessary.</p>
+        </div>
+    `;
+}
+
+newStatement();
+</script>
+
+</body>
+</html>
